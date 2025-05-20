@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUPV Smart Canteen Pre-Order System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @keyframes slideInOrder {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .order-slide-in {
+            animation: slideInOrder 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f8f8;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            margin-top: 30px;
+        }
+        h1 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        #adminOrders {
+            margin: 40px auto;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            padding: 30px 20px;
+        }
+        #ordersList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #ordersList li {
+            background: #fafafa;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            padding: 16px 14px;
+            transition: box-shadow 0.2s;
+        }
+        #ordersList li.order-slide-in {
+            background: #ffe5d0;
+        }
+        #resetAllOrdersBtn {
+            background: #e67e22;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+        #resetAllOrdersBtn:hover {
+            background: #cf711f;
+        }
+        .order-form, .menu, .quantity-container, .total-container {
+            margin: 20px auto;
+            max-width: 400px;
+            text-align: left;
+        }
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 6px 0 12px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button[type="button"], button[type="submit"] {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button[type="button"]:hover, button[type="submit"]:hover {
+            background: #c0392b;
+        }
+        #storeContent {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            padding: 30px 20px;
+            margin: 30px auto;
+            max-width: 600px;
+        }
+        #logoutBtn {
+            background: none;
+            color: #e74c3c;
+            border: none;
+            padding: 0 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 28px;
+            margin-bottom: 16px;
+            float: right;
+            margin-top: 18px;
+            margin-right: 18px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        #logoutBtn:hover {
+            background: #ffe5d0;
+        }
+    </style>
+</head>
+<body>
+    <button id="logoutBtn" class="hidden" onclick="logout()" title="Logout">
+        &#8592;
+    </button>
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQYuUovYCGmql64rKJRhCQyV8aJxVUhzFIhA&s" alt="Logo" class="logo">
+    <h1>TUPV Smart Canteen Pre-Order System</h1>
+
+    <div id="loginSection">
+        <h2>Login</h2>
+        <form id="loginForm" class="order-form">
+            <label for="userType">Login as:</label>
+            <select id="userType" required>
+                <option value="">-- Select User Type --</option>
+                <option value="student">Student</option>
+                <option value="admin">Admin</option>
+            </select>
+            <label for="userId">ID:</label>
+            <input type="text" id="userId" name="userId" required>
+            <label for="userName">Name:</label>
+            <input type="text" id="userName" name="userName" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div id="storeSelectSection" class="hidden">
+        <h2>Select a Store</h2>
+        <div class="order-form">
+            <label for="storeSelect">Choose a Store:</label>
+            <select id="storeSelect" onchange="redirectToStore()">
+                <option value="">-- Select a Store --</option>
+                <option value="anas">ANA'S Store</option>
+                <option value="meann">Me Ann Store</option>
+                <option value="shining">Shining Store</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="storeContent" class="hidden">
+        <h2>Today's Menu</h2>
+        <div class="menu">
+            <h3>Student Meals</h3>
+            <select id="studentMealSelect" onchange="saveOrderInputs();updateTotal();updateOrderPreview();">
+                <option value="">-- Select a Student Meal --</option>
+                <option value="45">Student Meal 1 - Egg and Hotdog with Rice - ₱45</option>
+                <option value="50">Student Meal 2 - Ham and Egg with Rice - ₱50</option>
+                <option value="55">Student Meal 3 - Spam and Egg with Rice - ₱55</option>
+                <option value="60">Student Meal 4 - Corned Beef and Egg with Rice - ₱60</option>
+            </select>
+            <h3>Dishes</h3>
+            <select id="dishSelect" onchange="toggleRiceSelection();saveOrderInputs();updateTotal();updateOrderPreview();">
+                <option value="">-- Select a Dish --</option>
+                <option value="60" class="anas">Chicken Adobo - ₱60</option>
+                <option value="50" class="anas">Pork Sinigang - ₱50</option>
+                <option value="25" class="anas">Lumpiang Shanghai 3pcs. - ₱25</option>
+                <option value="60" class="meann">Bicol Express - ₱60</option>
+                <option value="50" class="meann">Pork Caldereta - ₱50</option>
+                <option value="40" class="meann">Pinakbet - ₱40</option>
+                <option value="60" class="shining">Kare-Kare - ₱60</option>
+                <option value="50" class="shining">Laing - ₱50</option>
+                <option value="35" class="shining">Tortang Talong - ₱35</option>
+            </select>
+            <div id="riceSelection" class="hidden">
+                <h3>Would you like rice?</h3>
+                <div>
+                    <select id="riceTypeSelect" onchange="saveOrderInputs();updateTotal();updateOrderPreview();">
+                        <option value="">-- Select Rice Type --</option>
+                        <option value="15">Java Rice - ₱15</option>
+                        <option value="15">Fried Rice - ₱15</option>
+                        <option value="10">Plain Rice - ₱10</option>
+                    </select>
+                    <input type="number" id="riceQuantity" name="riceQuantity" min="1" value="1" placeholder="Qty" onchange="saveOrderInputs();updateTotal();updateOrderPreview();">
+                </div>
+            </div>
+            <h3>Drinks</h3>
+            <select id="drinkSelect" onchange="saveOrderInputs();updateTotal();updateOrderPreview();">
+                <option value="">-- Select a Drink --</option>
+                <option value="5" class="anas">Cup with Ice - ₱5</option>
+                <option value="15" class="anas">Bottled Water - ₱15</option>
+                <option value="25" class="anas">Iced Tea - ₱25</option>
+                <option value="30" class="anas">Soft Drink - ₱30</option>
+                <option value="5" class="meann">Cup with Ice - ₱5</option>
+                <option value="15" class="meann">Bottled Water - ₱15</option>
+                <option value="30" class="meann">Calamansi Juice - ₱30</option>
+                <option value="35" class="meann">Buko Juice - ₱35</option>
+                <option value="7" class="shining">Cup with Ice - ₱7</option>
+                <option value="20" class="shining">Bottled Water - ₱20</option>
+                <option value="25" class="shining">Melon Juice - ₱25</option>
+                <option value="30" class="shining">Canned Pineapple Juice - ₱30</option>
+            </select>
+            <h3>Desserts</h3>
+            <select id="dessertSelect" onchange="saveOrderInputs();updateTotal();updateOrderPreview();">
+                <option value="">-- Select a Dessert --</option>
+                <option value="35" class="anas">Halo-Halo - ₱35</option>
+                <option value="30" class="anas">Leche Flan - ₱30</option>
+                <option value="25" class="anas">Banana Cue - ₱25</option>
+                <option value="25" class="meann">Turon - ₱25</option>
+                <option value="30" class="meann">Buko Pandan - ₱30</option>
+                <option value="20" class="meann">Cassava Cake - ₱20</option>
+                <option value="35" class="shining">Ube Halaya - ₱35</option>
+                <option value="30" class="shining">Bibingka - ₱30</option>
+                <option value="25" class="shining">Puto Bumbong - ₱25</option>
+            </select>
+        </div>
+        <div class="quantity-container">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" min="1" value="1" onchange="saveOrderInputs();updateTotal();updateOrderPreview();">
+        </div>
+        <h2>Order Preview</h2>
+        <div class="order-form">
+            <ul id="orderPreview" style="text-align:left;max-width:400px;margin:0 auto;"></ul>
+        </div>
+        <div class="total-container" style="margin-top:20px;">
+            <p id="totalAmount">Total: ₱0</p>
+        </div>
+        <div class="order-form" id="submitSection">
+            <button type="button" onclick="submitOrder()">Submit Order</button>
+        </div>
+    </div>
+
+    <div id="adminOrders" class="hidden">
+        <h2>All Student Orders</h2>
+        <button 
+            id="resetAllOrdersBtn"
+            onclick="resetAllOrders()"
+        >Reset All Orders</button>
+        <ul id="ordersList"></ul>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let isAdmin = false;
+        let studentOrderInterval = null;
+        let lastOrderIds = [];
+        window.onload = function() {
+            const savedUser = localStorage.getItem('canteenUser');
+            const savedStore = localStorage.getItem('canteenStore');
+            const savedInputs = localStorage.getItem('canteenOrderInputs');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                if (currentUser.userType === "admin") {
+                    isAdmin = true;
+                    document.getElementById('adminOrders').classList.remove('hidden');
+                    fetchOrders();
+                    startOrderPolling();
+                } else {
+                    isAdmin = false;
+                    document.getElementById('storeSelectSection').classList.remove('hidden');
+                    if (savedStore) {
+                        document.getElementById('storeSelect').value = savedStore;
+                        redirectToStore();
+                    }
+                    if (savedInputs) {
+                        restoreOrderInputs(JSON.parse(savedInputs));
+                    }
+                    startOrderPolling();
+                }
+            }
+        };
+        document.getElementById('loginForm').onsubmit = function(e) {
+            e.preventDefault();
+            const userType = document.getElementById('userType').value;
+            const userId = document.getElementById('userId').value;
+            const userName = document.getElementById('userName').value;
+            if (userType && userId && userName) {
+                currentUser = { userType, userId, userName };
+                localStorage.setItem('canteenUser', JSON.stringify(currentUser));
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                if (userType === "admin") {
+                    isAdmin = true;
+                    document.getElementById('adminOrders').classList.remove('hidden');
+                    fetchOrders();
+                    startOrderPolling();
+                } else {
+                    isAdmin = false;
+                    document.getElementById('storeSelectSection').classList.remove('hidden');
+                    startOrderPolling();
+                }
+            }
+        };
+        function logout() {
+            localStorage.removeItem('canteenUser');
+            localStorage.removeItem('canteenStore');
+            localStorage.removeItem('canteenOrderInputs');
+            currentUser = null;
+            isAdmin = false;
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+            document.getElementById('storeSelectSection').classList.add('hidden');
+            document.getElementById('storeContent').classList.add('hidden');
+            document.getElementById('adminOrders').classList.add('hidden');
+            if (studentOrderInterval) clearInterval(studentOrderInterval);
+        }
+        function startOrderPolling() {
+            if (studentOrderInterval) clearInterval(studentOrderInterval);
+            studentOrderInterval = setInterval(() => {
+                if (isAdmin) {
+                    fetchOrders();
+                }
+            }, 2000);
+        }
+        function saveOrderInputs() {
+            const inputs = {
+                studentMeal: document.getElementById('studentMealSelect').selectedIndex,
+                dish: document.getElementById('dishSelect').selectedIndex,
+                riceType: document.getElementById('riceTypeSelect').selectedIndex,
+                riceQuantity: document.getElementById('riceQuantity').value,
+                drink: document.getElementById('drinkSelect').selectedIndex,
+                dessert: document.getElementById('dessertSelect').selectedIndex,
+                quantity: document.getElementById('quantity').value
+            };
+            localStorage.setItem('canteenOrderInputs', JSON.stringify(inputs));
+        }
+        function restoreOrderInputs(inputs) {
+            if (typeof inputs.studentMeal === "number") document.getElementById('studentMealSelect').selectedIndex = inputs.studentMeal;
+            if (typeof inputs.dish === "number") document.getElementById('dishSelect').selectedIndex = inputs.dish;
+            if (typeof inputs.riceType === "number") document.getElementById('riceTypeSelect').selectedIndex = inputs.riceType;
+            if (inputs.riceQuantity) document.getElementById('riceQuantity').value = inputs.riceQuantity;
+            if (typeof inputs.drink === "number") document.getElementById('drinkSelect').selectedIndex = inputs.drink;
+            if (typeof inputs.dessert === "number") document.getElementById('dessertSelect').selectedIndex = inputs.dessert;
+            if (inputs.quantity) document.getElementById('quantity').value = inputs.quantity;
+            toggleRiceSelection();
+            updateTotal();
+            updateOrderPreview();
+        }
+        function fetchOrders() {
+            fetch('http://localhost:3000/api/orders')
+                .then(res => res.json())
+                .then(data => {
+                    const ordersList = document.getElementById('ordersList');
+                    if (data.length === 0) {
+                        ordersList.innerHTML = "<li>No orders yet.</li>";
+                        lastOrderIds = [];
+                        return;
+                    }
+                    const newOrderIds = data.map(order => (order._id || order.id));
+                    ordersList.innerHTML = data.map(order => {
+                        const orderId = order._id || order.id;
+                        const isNew = !lastOrderIds.includes(orderId);
+                        return `<li class="${isNew ? 'order-slide-in' : ''}">
+                            <div>
+                                <strong>${order.studentName || order.userName}</strong> (${order.studentId || order.userId})<br>
+                                ${order.studentMeal ? "Student Meal: " + order.studentMeal + "<br>" : ""}
+                                ${order.dish ? "Dish: " + order.dish + "<br>" : ""}
+                                ${order.rice ? "Rice: " + order.rice + "<br>" : ""}
+                                ${order.drink ? "Drink: " + order.drink + "<br>" : ""}
+                                ${order.dessert ? "Dessert: " + order.dessert + "<br>" : ""}
+                                ${order.totalAmount ? order.totalAmount : ""}
+                            </div>
+                        </li>`;
+                    }).join('');
+                    lastOrderIds = newOrderIds;
+                });
+        }
+        function resetAllOrders() {
+            if (!confirm('Are you sure you want to reset all orders?')) return;
+            fetch('http://localhost:3000/api/orders', {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(() => {
+                fetchOrders();
+            })
+            .catch(() => {
+                alert('Failed to reset all orders.');
+            });
+        }
+        function redirectToStore() {
+            const store = document.getElementById('storeSelect').value;
+            const storeContent = document.getElementById('storeContent');
+            if (store) {
+                storeContent.classList.remove('hidden');
+            } else {
+                storeContent.classList.add('hidden');
+            }
+            const allItems = document.querySelectorAll('#dishSelect option, #drinkSelect option, #dessertSelect option');
+            allItems.forEach(item => {
+                if (item.classList.contains(store) || item.value === "") {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+            updateOrderPreview();
+        }
+        function toggleRiceSelection() {
+            const dish = document.getElementById('dishSelect').value;
+            const riceSelection = document.getElementById('riceSelection');
+            if (dish) {
+                riceSelection.classList.remove('hidden');
+            } else {
+                riceSelection.classList.add('hidden');
+            }
+            updateOrderPreview();
+        }
+        function updateTotal() {
+            const studentMeal = parseInt(document.getElementById('studentMealSelect').value) || 0;
+            const dish = parseInt(document.getElementById('dishSelect').value) || 0;
+            const riceType = parseInt(document.getElementById('riceTypeSelect').value) || 0;
+            const riceQuantity = parseInt(document.getElementById('riceQuantity').value) || 0;
+            const drink = parseInt(document.getElementById('drinkSelect').value) || 0;
+            const dessert = parseInt(document.getElementById('dessertSelect').value) || 0;
+            const orderQuantity = parseInt(document.getElementById('quantity') ? document.getElementById('quantity').value : 1) || 1;
+            let subtotal = studentMeal + dish + (riceType * riceQuantity) + drink + dessert;
+            let total = subtotal * orderQuantity;
+            document.getElementById('totalAmount').textContent = `Total: ₱${total} (Quantity: ${orderQuantity})`;
+        }
+        function updateOrderPreview() {
+            const orderPreview = document.getElementById('orderPreview');
+            const studentMealSelect = document.getElementById('studentMealSelect');
+            const dishSelect = document.getElementById('dishSelect');
+            const riceTypeSelect = document.getElementById('riceTypeSelect');
+            const riceQuantity = document.getElementById('riceQuantity').value || "0";
+            const drinkSelect = document.getElementById('drinkSelect');
+            const dessertSelect = document.getElementById('dessertSelect');
+            const orderQuantity = document.getElementById('quantity') ? document.getElementById('quantity').value : "1";
+            let preview = [];
+            let total = 0;
+            if (studentMealSelect.value) {
+                preview.push(`<li>Student Meal: ${studentMealSelect.options[studentMealSelect.selectedIndex].text} x ${orderQuantity}</li>`);
+                total += parseInt(studentMealSelect.value) * orderQuantity;
+            }
+            if (dishSelect.value) {
+                preview.push(`<li>Dish: ${dishSelect.options[dishSelect.selectedIndex].text} x ${orderQuantity}</li>`);
+                total += parseInt(dishSelect.value) * orderQuantity;
+            }
+            if (dishSelect.value && riceTypeSelect.value) {
+                preview.push(`<li>Rice: ${riceTypeSelect.options[riceTypeSelect.selectedIndex].text} x ${riceQuantity * orderQuantity}</li>`);
+                total += parseInt(riceTypeSelect.value) * (parseInt(riceQuantity) * orderQuantity);
+            }
+            if (drinkSelect.value) {
+                preview.push(`<li>Drink: ${drinkSelect.options[drinkSelect.selectedIndex].text} x ${orderQuantity}</li>`);
+                total += parseInt(drinkSelect.value) * orderQuantity;
+            }
+            if (dessertSelect.value) {
+                preview.push(`<li>Dessert: ${dessertSelect.options[dessertSelect.selectedIndex].text} x ${orderQuantity}</li>`);
+                total += parseInt(dessertSelect.value) * orderQuantity;
+            }
+            preview.push(`<li style="font-weight:bold;margin-top:10px;">Total: ₱${total} (Quantity: ${orderQuantity})</li>`);
+            orderPreview.innerHTML = preview.join('');
+            document.getElementById('totalAmount').textContent = `Total: ₱${total} (Quantity: ${orderQuantity})`;
+        }
+        function submitOrder() {
+            if (!currentUser) {
+                alert("Please login first.");
+                return;
+            }
+            const studentMealSelect = document.getElementById('studentMealSelect');
+            const dishSelect = document.getElementById('dishSelect');
+            const riceTypeSelect = document.getElementById('riceTypeSelect');
+            const riceQuantity = document.getElementById('riceQuantity').value || "0";
+            const drinkSelect = document.getElementById('drinkSelect');
+            const dessertSelect = document.getElementById('dessertSelect');
+            const orderQuantity = document.getElementById('quantity') ? document.getElementById('quantity').value : "1";
+            const totalAmount = document.getElementById('totalAmount').textContent;
+            let orderDetails = {
+                userType: currentUser.userType,
+                studentId: currentUser.userId,
+                studentName: currentUser.userName,
+                studentMeal: studentMealSelect.value ? studentMealSelect.options[studentMealSelect.selectedIndex].text : "",
+                dish: dishSelect.value ? dishSelect.options[dishSelect.selectedIndex].text : "",
+                rice: (dishSelect.value && riceTypeSelect.value) ? `${riceTypeSelect.options[riceTypeSelect.selectedIndex].text} x ${riceQuantity * orderQuantity}` : "",
+                drink: drinkSelect.value ? drinkSelect.options[drinkSelect.selectedIndex].text : "",
+                dessert: dessertSelect.value ? dessertSelect.options[dessertSelect.selectedIndex].text : "",
+                orderQuantity,
+                totalAmount
+            };
+            fetch('http://localhost:3000/api/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderDetails)
+            })
+            .then(res => res.json())
+            .then(() => {
+                alert('Order submitted!');
+            })
+            .catch(err => alert('Order failed: ' + err));
+        }
+    </script>
+</body>
+</html>
