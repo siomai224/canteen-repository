@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
 
-mongoose.connect('mongodb+srv://karlfritz:<your_password>@cluster0.ehwapm0.mongodb.net/canteen?retryWrites=true&w=majority', {
+mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });

@@ -357,7 +357,7 @@
             updateOrderPreview();
         }
         function fetchOrders() {
-            fetch('http://localhost:3000/api/orders')
+            fetch('https://canteen-repository.onrender.com/api/orders')
                 .then(res => res.json())
                 .then(data => {
                     const ordersList = document.getElementById('ordersList');
@@ -498,7 +498,7 @@
                 orderQuantity,
                 totalAmount
             };
-            fetch('http://localhost:3000/api/order', {
+            fetch('https://canteen-repository.onrender.com/api/order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderDetails)
